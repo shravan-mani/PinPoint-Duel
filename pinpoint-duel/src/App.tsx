@@ -19,7 +19,7 @@ export default function App() {
   const [settings, setSettings] = useState({
     isInverted: true,
     useGeodesic: true,
-    antiCheat: true
+    hardMode: false
   });
 
   const startNewGame = (initialPlayers: Player[], totalRounds: number) => {
