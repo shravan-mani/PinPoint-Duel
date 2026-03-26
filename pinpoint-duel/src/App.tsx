@@ -16,6 +16,11 @@ export default function App() {
   const [targetLocation, setTargetLocation] = useState<Location | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [playerOrder, setPlayerOrder] = useState<string[]>([]);
+  const [settings, setSettings] = useState({
+    isInverted: true,
+    useGeodesic: true,
+    antiCheat: true
+  });
 
   const startNewGame = (initialPlayers: Player[], totalRounds: number) => {
     setPlayers(initialPlayers);
@@ -143,6 +148,8 @@ export default function App() {
               round={currentRound}
               totalRounds={rounds}
               onRoundComplete={handleRoundComplete}
+              settings={settings}
+              onSettingsChange={setSettings}
             />
           </motion.div>
         )}
@@ -160,6 +167,7 @@ export default function App() {
               round={currentRound}
               totalRounds={rounds}
               onNext={handleNext}
+              settings={settings}
             />
           </motion.div>
         )}
