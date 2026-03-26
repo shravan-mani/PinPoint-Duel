@@ -10,9 +10,14 @@ interface ResultsProps {
   round: number;
   totalRounds: number;
   onNext: () => void;
+  settings: {
+    isInverted: boolean;
+    useGeodesic: boolean;
+    antiCheat: boolean;
+  };
 }
 
-export default function Results({ players, targetLocation, round, totalRounds, onNext }: ResultsProps) {
+export default function Results({ players, targetLocation, round, totalRounds, onNext, settings }: ResultsProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [sortBy, setSortBy] = useState<'distance' | 'score'>('distance');
 
@@ -79,7 +84,7 @@ export default function Results({ players, targetLocation, round, totalRounds, o
               { lat: targetLocation.lat, lng: targetLocation.lng },
               guessPos
             ],
-            geodesic: false,
+            geodesic: settings.useGeodesic,
             strokeColor: player.color,
             strokeOpacity: 0.6,
             strokeWeight: 2,
