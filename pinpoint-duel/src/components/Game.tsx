@@ -20,6 +20,7 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
   const [apiError, setApiError] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(true);
   const [nextPlayer, setNextPlayer] = useState<Player | null>(players[0]);
+  const [isInverted, setIsInverted] = useState(true);
 
   const streetViewRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -202,6 +203,13 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
 
           <div className="h-16 border-b-2 border-[#E4E3E0]/20 bg-[#121212] flex items-center justify-between px-6 shrink-0 z-40">
             <div className="flex items-center gap-6">
+              <button 
+                onClick={() => setIsInverted(!isInverted)}
+                className="w-8 h-8 flex items-center justify-center border border-[#E4E3E0]/20 hover:bg-[#E4E3E0] hover:text-[#0F1113] transition-colors text-[10px] font-mono"
+                title="Toggle Inversion"
+              >
+                {isInverted ? 'INV' : 'NRM'}
+              </button>
               <div className="flex flex-col">
                 <span className="text-[10px] uppercase tracking-widest opacity-50 font-mono leading-none">Round</span>
                 <span className="text-xl font-bold font-mono">{round} / {totalRounds}</span>
@@ -236,7 +244,7 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
 
           <div className="flex-1 flex overflow-hidden">
             <div className="flex-1 relative border-r-2 border-[#E4E3E0]/20">
-              <div ref={streetViewRef} className="absolute inset-0 invert" />
+              <div ref={streetViewRef} className={`absolute inset-0 ${isInverted ? 'invert' : ''}`} />
               <div className="absolute top-4 left-4 bg-[#121212] text-[#E4E3E0] px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-mono z-10 border border-[#E4E3E0]/20">
                 Guess Location
               </div>
