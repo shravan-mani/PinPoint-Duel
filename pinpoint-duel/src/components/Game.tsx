@@ -13,12 +13,12 @@ interface GameProps {
   settings: {
     isInverted: boolean;
     useGeodesic: boolean;
-    antiCheat: boolean;
+    hardMode: boolean;
   };
   onSettingsChange: (settings: {
     isInverted: boolean;
     useGeodesic: boolean;
-    antiCheat: boolean;
+    hardMode: boolean;
   }) => void;
 }
 
@@ -33,6 +33,7 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
   const [showSettings, setShowSettings] = useState(false);
 
   const streetViewRef = useRef<HTMLDivElement>(null);
+  const streetViewPanoramaRef = useRef<google.maps.StreetViewPanorama | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
   const tempMarkerRef = useRef<google.maps.Marker | null>(null);
@@ -62,22 +63,38 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
   useEffect(() => {
     if (!isApiLoaded || !streetViewRef.current || !mapRef.current) return;
 
-    new google.maps.StreetViewPanorama(streetViewRef.current, {
-      position: { lat: targetLocation.lat, lng: targetLocation.lng },
-      addressControl: false,
-      showRoadLabels: false,
-      zoomControl: true,
-      panControl: true,
-      enableCloseButton: false,
-    });
+    if (!streetViewPanoramaRef.current) {
+      streetViewPanoramaRef.current = new google.maps.StreetViewPanorama(streetViewRef.current, {
+        position: { lat: targetLocation.lat, lng: targetLocation.lng },
+        addressControl: !settings.hardMode,
+        showRoadLabels: !settings.hardMode,
+        zoomControl: true,
+        panControl: true,
+        enableCloseButton: false,
+      });
+    } else {
+      streetViewPanoramaRef.current.setPosition({ lat: targetLocation.lat, lng: targetLocation.lng });
+      streetViewPanoramaRef.current.setOptions({
+        addressControl: !settings.hardMode,
+        showRoadLabels: !settings.hardMode,
+      });
+    }
 
-    const map = new google.maps.Map(mapRef.current, {
-      center: { lat: 20, lng: 0 },
-      zoom: 2,
-      disableDefaultUI: true,
-      zoomControl: true,
-      styles: [{ featureType: "all", elementType: "labels", stylers: [{ visibility: settings.antiCheat ? "off" : "on" }] }]
-    });
+    if (!googleMapRef.current) {
+      googleMapRef.current = new google.maps.Map(mapRef.current, {
+        center: { lat: 20, lng: 0 },
+        zoom: 2,
+        disableDefaultUI: true,
+        zoomControl: true,
+        styles: [{ featureType: "all", elementType: "labels", stylers: [{ visibility: settings.hardMode ? "off" : "on" }] }]
+      });
+    } else {
+      googleMapRef.current.setOptions({
+        styles: [{ featureType: "all", elementType: "labels", stylers: [{ visibility: settings.hardMode ? "off" : "on" }] }]
+      });
+    }
+
+    const map = googleMapRef.current;
 
     map.addListener('click', (e: google.maps.MapMouseEvent) => {
       if (e.latLng) {
@@ -110,7 +127,7 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
     });
 
     googleMapRef.current = map;
-  }, [isApiLoaded, targetLocation]);
+  }, [isApiLoaded, targetLocation, settings.hardMode]);
 
   const submitGuess = () => {
     if (!tempGuess) return;
@@ -266,12 +283,12 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
                             </button>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase tracking-widest font-mono opacity-60">Anti-Cheat</span>
+                            <span className="text-[10px] uppercase tracking-widest font-mono opacity-60">Hard Mode</span>
                             <button
-                              onClick={() => onSettingsChange({ ...settings, antiCheat: !settings.antiCheat })}
-                              className={`w-8 h-4 rounded-full transition-colors relative ${settings.antiCheat ? 'bg-white' : 'bg-white/10'}`}
+                              onClick={() => onSettingsChange({ ...settings, hardMode: !settings.hardMode })}
+                              className={`w-8 h-4 rounded-full transition-colors relative ${settings.hardMode ? 'bg-white' : 'bg-white/10'}`}
                             >
-                              <div className={`absolute top-1 w-2 h-2 rounded-full transition-all ${settings.antiCheat ? 'right-1 bg-[#121212]' : 'left-1 bg-white'}`} />
+                              <div className={`absolute top-1 w-2 h-2 rounded-full transition-all ${settings.hardMode ? 'right-1 bg-[#121212]' : 'left-1 bg-white'}`} />
                             </button>
                           </div>
                         </div>
