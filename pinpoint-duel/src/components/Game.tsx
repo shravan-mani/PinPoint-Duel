@@ -102,6 +102,9 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
 
     const map = googleMapRef.current;
 
+    // Clear previous listeners to prevent memory leaks and multiple triggers
+    google.maps.event.clearListeners(map, 'click');
+
     map.addListener('click', (e: google.maps.MapMouseEvent) => {
       if (e.latLng) {
         const lat = e.latLng.lat();
