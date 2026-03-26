@@ -86,11 +86,17 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
         zoom: 2,
         disableDefaultUI: true,
         zoomControl: true,
-        styles: [{ featureType: "all", elementType: "labels", stylers: [{ visibility: settings.hardMode ? "off" : "on" }] }]
+        styles: [
+          { featureType: "all", elementType: "labels", stylers: [{ visibility: settings.hardMode ? "off" : "on" }] },
+          { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: settings.hardMode ? "off" : "on" }] }
+        ]
       });
     } else {
       googleMapRef.current.setOptions({
-        styles: [{ featureType: "all", elementType: "labels", stylers: [{ visibility: settings.hardMode ? "off" : "on" }] }]
+        styles: [
+          { featureType: "all", elementType: "labels", stylers: [{ visibility: settings.hardMode ? "off" : "on" }] },
+          { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: settings.hardMode ? "off" : "on" }] }
+        ]
       });
     }
 
