@@ -4,12 +4,13 @@ import { Users, Plus, Play, X } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface LobbyProps {
-  onStart: (players: Player[], rounds: number) => void;
+  onStart: (players: Player[], rounds: number, hardMode: boolean) => void;
 }
 
 export default function Lobby({ onStart }: LobbyProps) {
   const [playerNames, setPlayerNames] = useState<string[]>(['Player 1', 'Player 2']);
   const [rounds, setRounds] = useState(5);
+  const [hardMode, setHardMode] = useState(false);
 
   const addPlayer = () => {
     if (playerNames.length < 8) {
@@ -36,7 +37,7 @@ export default function Lobby({ onStart }: LobbyProps) {
       color: PLAYER_COLORS[i % PLAYER_COLORS.length],
       score: 0,
     }));
-    onStart(players, rounds);
+    onStart(players, rounds, hardMode);
   };
 
   return (
@@ -89,16 +90,28 @@ export default function Lobby({ onStart }: LobbyProps) {
 
           <section className="pt-4 border-t border-[#E4E3E0]">
             <h2 className="text-xs uppercase tracking-widest opacity-50 mb-4 font-mono">02. Game Settings</h2>
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium font-display">Rounds:</label>
-              <input 
-                type="number" 
-                min={1} 
-                max={20} 
-                value={rounds} 
-                onChange={(e) => setRounds(parseInt(e.target.value) || 1)}
-                className="w-20 border-2 border-[#E4E3E0] bg-transparent px-3 py-1 font-mono text-center"
-              />
+            <div className="flex flex-wrap items-center gap-8">
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium font-display">Rounds:</label>
+                <input 
+                  type="number" 
+                  min={1} 
+                  max={20} 
+                  value={rounds} 
+                  onChange={(e) => setRounds(parseInt(e.target.value) || 1)}
+                  className="w-20 border-2 border-[#E4E3E0] bg-transparent px-3 py-1 font-mono text-center"
+                />
+              </div>
+
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium font-display">Hard Mode:</label>
+                <button
+                  onClick={() => setHardMode(!hardMode)}
+                  className={`w-10 h-5 rounded-full transition-colors relative ${hardMode ? 'bg-white' : 'bg-white/10'}`}
+                >
+                  <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${hardMode ? 'right-1 bg-[#121212]' : 'left-1 bg-white'}`} />
+                </button>
+              </div>
             </div>
           </section>
 
