@@ -9,13 +9,22 @@ export const formatDistance = (meters: number): string => {
   return `${(meters / 1000).toFixed(1)}km`;
 };
 
-export const loadGoogleMaps = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if (window.google && window.google.maps) {
-      resolve();
-      return;
-    }
+let mapsPromise: Promise<void> | null = null;
 
+export const loadGoogleMaps = (): Promise<void> => {
+  if (window.google && window.google.maps) {
+    return Promise.resolve();
+  }
+
+  if (mapsPromise) {
+    return mapsPromise;
+  }
+
+  mapsPromise = new Promise((resolve, reject) => {
+    // SECURITY NOTE: The Google Maps JS API key must be exposed to the client.
+    // To prevent quota abuse, you MUST restrict this key in the Google Cloud Console
+    // to only allow requests from your specific domain (HTTP referrers).
+    // For other APIs (like Geocoding or Places), consider using a backend proxy relay.
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
       reject(new Error('VITE_GOOGLE_MAPS_API_KEY is missing'));
@@ -27,7 +36,12 @@ export const loadGoogleMaps = (): Promise<void> => {
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load Google Maps script'));
+    script.onerror = () => {
+      mapsPromise = null;
+      reject(new Error('Failed to load Google Maps script'));
+    };
     document.head.appendChild(script);
   });
+
+  return mapsPromise;
 };
