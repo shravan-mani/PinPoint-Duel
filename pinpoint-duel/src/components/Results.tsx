@@ -13,32 +13,49 @@ interface ResultsProps {
   settings: {
     isInverted: boolean;
     useGeodesic: boolean;
-    antiCheat: boolean;
+    hardMode: boolean;
   };
 }
 
 export default function Results({ players, targetLocation, round, totalRounds, onNext, settings }: ResultsProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const googleMapRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const polylinesRef = useRef<google.maps.Polyline[]>([]);
   const [sortBy, setSortBy] = useState<'distance' | 'score'>('distance');
 
   useEffect(() => {
+    let isMounted = true;
+
     loadGoogleMaps().then(() => {
-      const map = new google.maps.Map(mapRef.current!, {
-        center: { lat: targetLocation.lat, lng: targetLocation.lng },
-        zoom: 3,
-        disableDefaultUI: true,
-        zoomControl: true,
-        styles: [
-          {
-            "featureType": "all",
-            "elementType": "labels",
-            "stylers": [{ "visibility": "on" }]
-          }
-        ]
-      });
+      if (!isMounted || !mapRef.current) return;
+
+      if (!googleMapRef.current) {
+        googleMapRef.current = new google.maps.Map(mapRef.current, {
+          center: { lat: targetLocation.lat, lng: targetLocation.lng },
+          zoom: 3,
+          disableDefaultUI: true,
+          zoomControl: true,
+          styles: [
+            {
+              "featureType": "all",
+              "elementType": "labels",
+              "stylers": [{ "visibility": "on" }]
+            }
+          ]
+        });
+      }
+
+      const map = googleMapRef.current;
+
+      // Clear existing markers/lines
+      markersRef.current.forEach(m => m.setMap(null));
+      polylinesRef.current.forEach(p => p.setMap(null));
+      markersRef.current = [];
+      polylinesRef.current = [];
 
       // Target Marker
-      new google.maps.Marker({
+      const targetMarker = new google.maps.Marker({
         position: { lat: targetLocation.lat, lng: targetLocation.lng },
         map,
         icon: {
@@ -51,6 +68,7 @@ export default function Results({ players, targetLocation, round, totalRounds, o
         },
         zIndex: 1000
       });
+      markersRef.current.push(targetMarker);
 
       // Player Markers and Lines
       const bounds = new google.maps.LatLngBounds();
@@ -61,7 +79,7 @@ export default function Results({ players, targetLocation, round, totalRounds, o
           const guessPos = { lat: player.lastGuess.lat, lng: player.lastGuess.lng };
           bounds.extend(guessPos);
 
-          new google.maps.Marker({
+          const playerMarker = new google.maps.Marker({
             position: guessPos,
             map,
             icon: {
@@ -78,8 +96,9 @@ export default function Results({ players, targetLocation, round, totalRounds, o
               fontWeight: 'bold'
             }
           });
+          markersRef.current.push(playerMarker);
 
-          new google.maps.Polyline({
+          const playerLine = new google.maps.Polyline({
             path: [
               { lat: targetLocation.lat, lng: targetLocation.lng },
               guessPos
@@ -90,12 +109,17 @@ export default function Results({ players, targetLocation, round, totalRounds, o
             strokeWeight: 2,
             map
           });
+          polylinesRef.current.push(playerLine);
         }
       });
 
       map.fitBounds(bounds, 50);
     });
-  }, [targetLocation, players]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [targetLocation, players, settings.useGeodesic]);
 
   const sortedPlayers = [...players].sort((a, b) => {
     if (sortBy === 'distance') {
