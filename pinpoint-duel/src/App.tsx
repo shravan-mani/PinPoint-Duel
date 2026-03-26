@@ -17,14 +17,15 @@ export default function App() {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [playerOrder, setPlayerOrder] = useState<string[]>([]);
   const [settings, setSettings] = useState({
-    isInverted: true,
-    useGeodesic: true,
+    isInverted: false,
+    useGeodesic: false,
     hardMode: false
   });
 
-  const startNewGame = (initialPlayers: Player[], totalRounds: number) => {
+  const startNewGame = (initialPlayers: Player[], totalRounds: number, hardMode: boolean) => {
     setPlayers(initialPlayers);
     setRounds(totalRounds);
+    setSettings(prev => ({ ...prev, hardMode }));
     setCurrentRound(1);
     const initialOrder = initialPlayers.map(p => p.id);
     setPlayerOrder(initialOrder);
