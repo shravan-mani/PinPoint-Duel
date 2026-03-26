@@ -10,9 +10,19 @@ interface GameProps {
   round: number;
   totalRounds: number;
   onRoundComplete: (updatedPlayers: Player[]) => void;
+  settings: {
+    isInverted: boolean;
+    useGeodesic: boolean;
+    antiCheat: boolean;
+  };
+  onSettingsChange: (settings: {
+    isInverted: boolean;
+    useGeodesic: boolean;
+    antiCheat: boolean;
+  }) => void;
 }
 
-export default function Game({ players, targetLocation, round, totalRounds, onRoundComplete }: GameProps) {
+export default function Game({ players, targetLocation, round, totalRounds, onRoundComplete, settings, onSettingsChange }: GameProps) {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [guesses, setGuesses] = useState<{ lat: number; lng: number; playerId: string }[]>([]);
   const [tempGuess, setTempGuess] = useState<{ lat: number; lng: number } | null>(null);
@@ -20,7 +30,7 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
   const [apiError, setApiError] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(true);
   const [nextPlayer, setNextPlayer] = useState<Player | null>(players[0]);
-  const [isInverted, setIsInverted] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
 
   const streetViewRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -66,7 +76,7 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
       zoom: 2,
       disableDefaultUI: true,
       zoomControl: true,
-      styles: [{ featureType: "all", elementType: "labels", stylers: [{ visibility: "off" }] }]
+      styles: [{ featureType: "all", elementType: "labels", stylers: [{ visibility: settings.antiCheat ? "off" : "on" }] }]
     });
 
     map.addListener('click', (e: google.maps.MapMouseEvent) => {
@@ -208,7 +218,7 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
                 <span className="text-xl font-bold font-mono">{round} / {totalRounds}</span>
               </div>
               <div className="h-8 w-[1px] bg-[#E4E3E0] opacity-20" />
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 relative">
                 <div 
                   className="w-3 h-3 border border-[#E4E3E0]" 
                   style={{ backgroundColor: players[currentPlayerIndex].color }}
@@ -222,11 +232,53 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
                     {players[currentPlayerIndex].name}
                   </span>
                 </div>
-                <button 
-                  onClick={() => setIsInverted(!isInverted)}
-                  className="w-4 h-4 rounded-full bg-[#E4E3E0] opacity-[0.03] hover:opacity-100 transition-opacity cursor-default ml-2"
-                  title="Toggle Inversion (For Development Purposes Only)"
-                />
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowSettings(!showSettings)}
+                    className="w-4 h-4 rounded-full bg-[#E4E3E0] opacity-[0.03] hover:opacity-100 transition-opacity cursor-default ml-2"
+                    title="Settings (For Development Purposes Only)"
+                  />
+                  <AnimatePresence>
+                    {showSettings && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute top-full left-0 mt-4 w-48 bg-[#121212] border-2 border-[#E4E3E0]/20 p-4 shadow-2xl z-[100]"
+                      >
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] uppercase tracking-widest font-mono opacity-60">Invert SV</span>
+                            <button
+                              onClick={() => onSettingsChange({ ...settings, isInverted: !settings.isInverted })}
+                              className={`w-8 h-4 rounded-full transition-colors relative ${settings.isInverted ? 'bg-white' : 'bg-white/10'}`}
+                            >
+                              <div className={`absolute top-1 w-2 h-2 rounded-full transition-all ${settings.isInverted ? 'right-1 bg-[#121212]' : 'left-1 bg-white'}`} />
+                            </button>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] uppercase tracking-widest font-mono opacity-60">Geodesic</span>
+                            <button
+                              onClick={() => onSettingsChange({ ...settings, useGeodesic: !settings.useGeodesic })}
+                              className={`w-8 h-4 rounded-full transition-colors relative ${settings.useGeodesic ? 'bg-white' : 'bg-white/10'}`}
+                            >
+                              <div className={`absolute top-1 w-2 h-2 rounded-full transition-all ${settings.useGeodesic ? 'right-1 bg-[#121212]' : 'left-1 bg-white'}`} />
+                            </button>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] uppercase tracking-widest font-mono opacity-60">Anti-Cheat</span>
+                            <button
+                              onClick={() => onSettingsChange({ ...settings, antiCheat: !settings.antiCheat })}
+                              className={`w-8 h-4 rounded-full transition-colors relative ${settings.antiCheat ? 'bg-white' : 'bg-white/10'}`}
+                            >
+                              <div className={`absolute top-1 w-2 h-2 rounded-full transition-all ${settings.antiCheat ? 'right-1 bg-[#121212]' : 'left-1 bg-white'}`} />
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
 
@@ -242,7 +294,7 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
 
           <div className="flex-1 flex overflow-hidden">
             <div className="flex-1 relative border-r-2 border-[#E4E3E0]/20">
-              <div ref={streetViewRef} className={`absolute inset-0 ${isInverted ? 'invert' : ''}`} />
+              <div ref={streetViewRef} className={`absolute inset-0 ${settings.isInverted ? 'invert' : ''}`} />
               <div className="absolute top-4 left-4 bg-[#121212] text-[#E4E3E0] px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-mono z-10 border border-[#E4E3E0]/20">
                 Guess Location
               </div>
