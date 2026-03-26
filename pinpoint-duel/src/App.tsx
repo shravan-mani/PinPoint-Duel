@@ -29,10 +29,10 @@ export default function App() {
     setCurrentRound(1);
     const initialOrder = initialPlayers.map(p => p.id);
     setPlayerOrder(initialOrder);
-    findRandomLocation(initialOrder);
+    findRandomLocation();
   };
 
-  const findRandomLocation = async (currentOrder: string[]) => {
+  const findRandomLocation = async () => {
     setIsLoadingLocation(true);
     try {
       await loadGoogleMaps();
@@ -40,28 +40,32 @@ export default function App() {
       
       let found = false;
       let attempts = 0;
+      const MAX_ATTEMPTS = 50;
+      const BATCH_SIZE = 5;
       
-      while (!found && attempts < 50) {
-        attempts++;
-        const coords = getRandomCoordinates();
-        try {
-          const result = await sv.getPanorama({
+      while (!found && attempts < MAX_ATTEMPTS) {
+        const batch = Array.from({ length: BATCH_SIZE }).map(() => {
+          const coords = getRandomCoordinates();
+          return sv.getPanorama({
             location: coords,
             radius: 100000, // 100km radius for better hit rate
             source: google.maps.StreetViewSource.OUTDOOR
+          }).catch(() => null); // Catch errors and return null
+        });
+
+        const results = await Promise.all(batch);
+        attempts += BATCH_SIZE;
+
+        const validResult = results.find(r => r?.data.location?.latLng);
+        
+        if (validResult && validResult.data.location?.latLng) {
+          setTargetLocation({
+            id: Math.random().toString(36).substr(2, 9),
+            lat: validResult.data.location.latLng.lat(),
+            lng: validResult.data.location.latLng.lng(),
+            name: 'Unknown Location'
           });
-          
-          if (result.data.location?.latLng) {
-            setTargetLocation({
-              id: Math.random().toString(36).substr(2, 9),
-              lat: result.data.location.latLng.lat(),
-              lng: result.data.location.latLng.lng(),
-              name: 'Unknown Location'
-            });
-            found = true;
-          }
-        } catch (e) {
-          // No panorama found at this location, try again
+          found = true;
         }
       }
       
@@ -93,7 +97,7 @@ export default function App() {
       newOrder.unshift(last);
       setPlayerOrder(newOrder);
       
-      findRandomLocation(newOrder);
+      findRandomLocation();
     } else {
       setGameState('LEADERBOARD');
     }
