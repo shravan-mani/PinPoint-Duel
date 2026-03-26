@@ -203,13 +203,6 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
 
           <div className="h-16 border-b-2 border-[#E4E3E0]/20 bg-[#121212] flex items-center justify-between px-6 shrink-0 z-40">
             <div className="flex items-center gap-6">
-              <button 
-                onClick={() => setIsInverted(!isInverted)}
-                className="w-8 h-8 flex items-center justify-center border border-[#E4E3E0]/20 hover:bg-[#E4E3E0] hover:text-[#0F1113] transition-colors text-[10px] font-mono"
-                title="Toggle Inversion"
-              >
-                {isInverted ? 'INV' : 'NRM'}
-              </button>
               <div className="flex flex-col">
                 <span className="text-[10px] uppercase tracking-widest opacity-50 font-mono leading-none">Round</span>
                 <span className="text-xl font-bold font-mono">{round} / {totalRounds}</span>
@@ -229,6 +222,11 @@ export default function Game({ players, targetLocation, round, totalRounds, onRo
                     {players[currentPlayerIndex].name}
                   </span>
                 </div>
+                <button 
+                  onClick={() => setIsInverted(!isInverted)}
+                  className="w-4 h-4 rounded-full bg-[#E4E3E0] opacity-[0.03] hover:opacity-100 transition-opacity cursor-default ml-2"
+                  title="Toggle Inversion (For Development Purposes Only)"
+                />
               </div>
             </div>
 
